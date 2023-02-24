@@ -87,11 +87,6 @@ class Agent(nn.Module):
 
     def log_rl(self, val_batch):
         return
-        self.train(False)
-        with torch.no_grad():
-            obs, _ = self.format_obs(val_batch.obs)
-            next_obs, _ = self.format_obs(val_batch.next_obs)
-            self.update_critic(obs, next_obs, val_batch, train=False)
 
     def format_obs(self, obs, instr_dropout_prob=0):
         cutoff = int(instr_dropout_prob * len(obs))

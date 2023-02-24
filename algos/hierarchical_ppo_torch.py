@@ -33,33 +33,6 @@ class HierarchicalPPOAgent(PPOAgent):
                                                      betas=betas)
         self.train()
 
-    def update_critic(self, obs, next_obs, batch, train=True, step=1):
-        collected_value = batch.value
-        collected_return = batch.returnn
-        value = self.critic(obs)
-        value_clipped = collected_value + torch.clamp(value - collected_value, -self.args.clip_eps, self.args.clip_eps)
-        surr1 = (value - collected_return).pow(2)
-        surr2 = (value_clipped - collected_return).pow(2)
-        critic_loss = torch.max(surr1, surr2).mean()
-
-        if train:
-            logger.logkv('train_critic/loss', utils.to_np(critic_loss))
-
-            # Optimize the critic
-            self.critic_optimizer.zero_grad()
-            critic_loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.critic.parameters(), .5)
-            for n, p in self.critic.named_parameters():
-                param_norm = p.grad.detach().data.norm(2).cpu().numpy()
-                logger.logkv(f'grads/{n}', param_norm)
-            self.critic_optimizer.step()
-        else:
-            logger.logkv('val/critic_loss', utils.to_np(critic_loss))
-            logger.logkv('val/V_mean', utils.to_np(value.mean()))
-            logger.logkv('val/V_std', utils.to_np(value.std()))
-            logger.logkv('val/obs_min', utils.to_np(obs.min()))
-            logger.logkv('val/obs_max', utils.to_np(obs.max()))
-
     def update_actor(self, obs, batch):
 
         # control penalty
